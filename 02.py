@@ -93,9 +93,58 @@ X.loc[xx.index, 'Last5Won'] = xx['Last5Won']
 X.loc[xx.index, 'Last5Draw'] = xx['Last5Draw']
 X.loc[xx.index, 'Last5Lost'] = xx['Last5Lost']
 
-X = X.loc[X['Year'] >= 2011]
-Y = X['FTR']
+X.loc[np.isnan(X['Last5AgainstThisOpponentWon']), 'Last5AgainstThisOpponentWon'] = 0
+X.loc[np.isnan(X['Last5AgainstThisOpponentDraw']), 'Last5AgainstThisOpponentDraw'] = 0
+X.loc[np.isnan(X['Last5AgainstThisOpponentLost']), 'Last5AgainstThisOpponentLost'] = 0
+X.loc[np.isnan(X['LastThisOpponentWon']), 'LastThisOpponentWon'] = 0
+X.loc[np.isnan(X['LastThisOpponentDraw']), 'LastThisOpponentDraw'] = 0
+X.loc[np.isnan(X['LastThisOpponentLost']), 'LastThisOpponentLost'] = 0
+X.loc[np.isnan(X['Last5Won']), 'Last5Won'] = 0
+X.loc[np.isnan(X['Last5Draw']), 'Last5Draw'] = 0
+X.loc[np.isnan(X['Last5Lost']), 'Last5Lost'] = 0
+
+# X = X.loc[X['Year'] >= 2011]
+Y = X[['Opponent', 'FTR']]
 del X['Lost']
 del X['Draw']
 del X['Won']
 del X['FTR']
+del X['Date']
+
+X_train = X[(X['Year'] >= 2011) & (X['Year'] <= 2016)]
+Y_train = Y[(X['Year'] >= 2011) & (X['Year'] <= 2016)]
+X_test = X[(X['Year'] >= 2017)]
+Y_test = Y[(X['Year'] >= 2017)]
+
+# construct decision tree
+X_train_opponents = X_train.groupby('Opponent')
+Y_train_opponents = Y_train.groupby('Opponent')
+X_test_opponents = X_test.groupby('Opponent')
+Y_test_opponents = Y_test.groupby('Opponent')
+x_test_teams = X_test_opponents.groups.keys()
+X['Predict'] = ''
+for key, X_train_opponent in X_train_opponents:
+    if key not in x_test_teams:
+        continue
+    X_test_opponent = X_test_opponents.get_group(key)
+    Y_train_opponent = Y_train_opponents.get_group(key)
+    Y_test_opponent = Y_test_opponents.get_group(key)
+
+    del Y_train_opponent['Opponent']
+    del Y_test_opponent['Opponent']
+    del X_train_opponent['Opponent']
+    del X_test_opponent['Opponent']
+    del X_train_opponent['Year']
+    del X_test_opponent['Year']
+
+    clf_entropy = DecisionTreeClassifier(criterion="entropy", random_state=100,
+     max_depth=3, min_samples_leaf=5)
+    clf_entropy.fit(X_train_opponent, Y_train_opponent)
+
+    Y_pred = clf_entropy.predict(X_test_opponent)
+    X.loc[X_test_opponent.index, 'Predict'] = Y_pred
+    # print(Y_test_opponent)
+X['Actual'] = Y['FTR']
+x = X[X['Predict'] != '']
+x.to_csv('./x.csv')
+print('done')
