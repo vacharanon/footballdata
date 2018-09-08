@@ -125,8 +125,8 @@ for team in teams:
     del X['FTR']
     del X['Date']
 
-    # X_train = X[(X['Year'] >= 2011) & (X['Year'] <= 2016)]
-    # Y_train = Y[(X['Year'] >= 2011) & (X['Year'] <= 2016)]
+    # x_train = X[(X['Year'] >= 2011) & (X['Year'] <= 2016)]
+    # y_train = Y[(X['Year'] >= 2011) & (X['Year'] <= 2016)]
     X_train = X[(X['Year'] < predict_year)]
     Y_train = Y[(X['Year'] < predict_year)]
     X_test = X[(X['Year'] >= predict_year)]
