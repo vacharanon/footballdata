@@ -37,7 +37,7 @@ def load_league_csv(league, start_year=2005):
     return df
 
 
-def make_features(df, teams, train_year, predict_year):
+def make_features(df, teams, train_year, validate_year, test_year):
     # df_league = None
     ret = {}
 

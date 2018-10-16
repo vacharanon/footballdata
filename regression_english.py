@@ -5,14 +5,14 @@ from sklearn.linear_model import LogisticRegression
 from football_loader import football_loader
 
 league = 'english'
-df = football_loader.load_league_csv(league)
 validate_year = 2015
 test_year = 2016
 train_year = 2011
+df = football_loader.load_league_csv(league)
 teams = df.loc[df['Year'] == validate_year, 'HomeTeam']
 teams = teams.unique()
 teams.sort()
-teams = football_loader.make_features(df, teams, train_year, validate_year)
+teams = football_loader.make_features(df, teams, train_year, validate_year, test_year)
 df_league = None
 
 for team in teams:
@@ -21,8 +21,10 @@ for team in teams:
     # split data into train - test sets
     x_train = X[(X['Year'] < validate_year)]
     y_train = Y[(X['Year'] < validate_year)]
-    x_test = X[(X['Year'] >= validate_year)]
-    y_test = Y[(X['Year'] >= validate_year)]
+    x_validate = X[(X['Year'] >= validate_year) & (X['Year'] < test_year)]
+    y_validate = Y[(X['Year'] >= validate_year) & (X['Year'] < test_year)]
+    x_test = X[(X['Year'] >= test_year)]
+    y_test = Y[(X['Year'] >= test_year)]
     if len(y_train) <= 0:
         print(f'skip {team}')
         continue
