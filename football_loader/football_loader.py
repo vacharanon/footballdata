@@ -85,6 +85,20 @@ def make_features(df, teams, train_year, validate_year, test_year):
         all['Corners'] = np.where(all['HomeMatch'], df_team['HC'], df_team['AC'])
         all['Shots'] = np.where(all['HomeMatch'], df_team['HS'], df_team['AS'])
         all['ShotsOnTarget'] = np.where(all['HomeMatch'], df_team['HST'], df_team['AST'])
+        all['Points'] = np.where(all['Won'], 3,
+                                 np.where(all['Draw'], 1, 0)
+                                  )
+        all['AdjustedPoints'] = np.where(all['HomeMatch'],
+                                  # home match
+                                         np.where(all['Won'], 1,
+                                                  np.where(all['Draw'], 0, -1)
+                                                  )
+                                         ,
+                                  # away match
+                                         np.where(all['Won'], 1.5,
+                                                  np.where(all['Draw'], 0.5, 0)
+                                                  )
+                                  )
 
         # find number of times won against this opponent in last 5 meetings
         for key, groupByOpponent in all.groupby('Opponent'):
@@ -139,6 +153,9 @@ def make_features(df, teams, train_year, validate_year, test_year):
             xx['AwayWonNum'] = np.where((xx['HomeMatch'] == False) & xx['Won'], 1, 0)
             xx['AwayWonSoFar'] = np.nancumsum(xx['AwayWonNum'].shift())
 
+            xx['PointsSoFar'] = np.nancumsum(xx['Points'].shift())
+            xx['AdjustedPointsSoFar'] = np.nancumsum(xx['AdjustedPoints'].shift())
+
             # restore index
             xx = xx.set_index('idx')
 
@@ -148,6 +165,8 @@ def make_features(df, teams, train_year, validate_year, test_year):
             # all.loc[xx.index, 'ShotsOnTargetSoFar'] = xx['ShotsOnTargetSoFar']
             # all.loc[xx.index, 'HomeWonSoFar'] = xx['HomeWonSoFar']
             # all.loc[xx.index, 'AwayWonSoFar'] = xx['AwayWonSoFar']
+            all.loc[xx.index, 'PointsSoFar'] = xx['PointsSoFar']
+            all.loc[xx.index, 'AdjustedPointsSoFar'] = xx['AdjustedPointsSoFar']
 
         # find recent forms
         idx = all.index
@@ -229,3 +248,5 @@ def close_leaks(X):
     del X['Corners']
     del X['Shots']
     del X['ShotsOnTarget']
+    del X['Points']
+    del X['AdjustedPoints']
