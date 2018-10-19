@@ -71,16 +71,20 @@ def make_features(df, teams, train_year, validate_year, test_year):
         all['B365Max'] = np.maximum(np.maximum(df_team['B365H'], df_team['B365A']), df_team['B365D'])
         all['B365Min'] = np.minimum(np.minimum(df_team['B365H'], df_team['B365A']), df_team['B365D'])
         all['B365Say'] = np.where(all['HomeMatch'],
-                                # home match
-                                np.where(all['B365Max'] == df_team['B365H'], -1,
-                                         np.where(all['B365Max'] == df_team['B365A'], 1,
-                                                  0)),
-                                # away match
-                                np.where(all['B365Max'] == df_team['B365H'], 1,
-                                         np.where(all['B365Max'] == df_team['B365A'], -1,
-                                                  0))
-                                )
-        all['B365Diff'] = np.where(all['B365Say'] == 1, all['B365Max'] - all['B365Min'], all['B365Min'] - all['B365Max'])
+                                  # home match
+                                  np.where(all['B365Max'] == df_team['B365H'], -1,
+                                           np.where(all['B365Max'] == df_team['B365A'], 1,
+                                                    0)),
+                                  # away match
+                                  np.where(all['B365Max'] == df_team['B365H'], 1,
+                                           np.where(all['B365Max'] == df_team['B365A'], -1,
+                                                    0))
+                                  )
+        all['B365Diff'] = np.where(all['B365Say'] == 1, all['B365Max'] - all['B365Min'],
+                                   all['B365Min'] - all['B365Max'])
+        all['Corners'] = np.where(all['HomeMatch'], df_team['HC'], df_team['AC'])
+        all['Shots'] = np.where(all['HomeMatch'], df_team['HS'], df_team['AS'])
+        all['ShotsOnTarget'] = np.where(all['HomeMatch'], df_team['HST'], df_team['AST'])
 
         # find number of times won against this opponent in last 5 meetings
         for key, groupByOpponent in all.groupby('Opponent'):
@@ -115,6 +119,36 @@ def make_features(df, teams, train_year, validate_year, test_year):
             all.loc[xx.index, 'LastAgainstThisOpponentDraw'] = xx['LastAgainstThisOpponentDraw']
             # X.loc[xx.index, 'LastThisOpponentLost'] = xx['LastThisOpponentLost']
 
+        # stats by year/season
+        for year, groupByYear in all.groupby('Year'):
+            # print(year)
+            # keep index as new a column, will be restored and assigned back to X later
+            idx = groupByYear.index
+
+            # make match day an index because rolling need an index date
+            xx = groupByYear.set_index('Date')
+            xx['idx'] = idx
+
+            # shift to exclude self
+            xx['CornersSoFar'] = np.nancumsum(xx['Corners'].shift())
+            xx['ShotsSoFar'] = np.nancumsum(xx['Shots'].shift())
+            xx['ShotsOnTargetSoFar'] = np.nancumsum(xx['ShotsOnTarget'].shift())
+
+            xx['HomeWonNum'] = np.where(xx['HomeMatch'] & xx['Won'], 1, 0)
+            xx['HomeWonSoFar'] = np.nancumsum(xx['HomeWonNum'].shift())
+            xx['AwayWonNum'] = np.where((xx['HomeMatch'] == False) & xx['Won'], 1, 0)
+            xx['AwayWonSoFar'] = np.nancumsum(xx['AwayWonNum'].shift())
+
+            # restore index
+            xx = xx.set_index('idx')
+
+            # assign back to the big dataframe
+            # all.loc[xx.index, 'CornersSoFar'] = xx['CornersSoFar']
+            # all.loc[xx.index, 'ShotsSoFar'] = xx['ShotsSoFar']
+            # all.loc[xx.index, 'ShotsOnTargetSoFar'] = xx['ShotsOnTargetSoFar']
+            # all.loc[xx.index, 'HomeWonSoFar'] = xx['HomeWonSoFar']
+            # all.loc[xx.index, 'AwayWonSoFar'] = xx['AwayWonSoFar']
+
         # find recent forms
         idx = all.index
         xx = all.set_index('Date')
@@ -126,6 +160,7 @@ def make_features(df, teams, train_year, validate_year, test_year):
         xx['Last3Draw'] = xx['Draw'].rolling(4).apply(lambda x: np.nansum(x.shift()), raw=False)
         xx['LastWon'] = xx['Won'].rolling(2).apply(lambda x: np.nansum(x.shift()), raw=False)
         xx['LastDraw'] = xx['Draw'].rolling(2).apply(lambda x: np.nansum(x.shift()), raw=False)
+
         # restore index
         xx = xx.set_index('idx')
         # assign back to the big dataframe
@@ -191,3 +226,6 @@ def close_leaks(X):
     del X['Team']
     del X['B365Max']
     del X['B365Min']
+    del X['Corners']
+    del X['Shots']
+    del X['ShotsOnTarget']
