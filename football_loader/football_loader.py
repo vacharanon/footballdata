@@ -1,6 +1,18 @@
 import os
 import numpy as np
 import pandas as pd
+from datetime import datetime
+
+
+def load_next_csv(league, div):
+    df_next = pd.read_csv(f'next/{league}.csv',
+                              engine='python')
+    df_next = df_next[df_next['Div'] == div]
+    df_next.reset_index(drop=True, inplace=True)
+    df_next['Year'] = datetime.strptime(df_next['Date'].values[0], '%d/%m/%y').date().year
+    df_next['Match'] = df_next.index + 1
+    df_next['FTR'] = ''
+    return df_next
 
 
 def load_league_csv(league, start_year=2005):
@@ -37,7 +49,7 @@ def load_league_csv(league, start_year=2005):
     return df
 
 
-def make_features(df, teams, train_year, validate_year, test_year):
+def make_features(df, teams):
     # df_league = None
     ret = {}
 
@@ -63,10 +75,11 @@ def make_features(df, teams, train_year, validate_year, test_year):
         # X['FullTimeGoals'] = np.where(X['HomeMatch'], ath_madrid['FTHG'], ath_madrid['FTAG'])
         # X['FullTimeOpponentGoals'] = np.where(X['HomeMatch'], ath_madrid['FTAG'], ath_madrid['FTHG'])
         all['FTR'] = df_team['FTR']
-        all['Won'] = np.where(all['HomeMatch'], df_team['FTR'] == 'H', df_team['FTR'] == 'A')
-        all['Draw'] = df_team['FTR'] == 'D'
-        all['Lost'] = np.where(all['HomeMatch'], df_team['FTR'] == 'A', df_team['FTR'] == 'H')
-        all['Result'] = np.where(all['Won'], 'Win', (np.where(all['Lost'], 'Lose', 'Draw')))
+        # all['Won'] = np.where(all['HomeMatch'], df_team['FTR'] == 'H', df_team['FTR'] == 'A')
+        all['Won'] = np.where(df_team['FTR'] == '', False, np.where(all['HomeMatch'], df_team['FTR'] == 'H', df_team['FTR'] == 'A'))
+        all['Draw'] = np.where(df_team['FTR'] == '', False, df_team['FTR'] == 'D')
+        all['Lost'] = np.where(df_team['FTR'] == '', False, np.where(all['HomeMatch'], df_team['FTR'] == 'A', df_team['FTR'] == 'H'))
+        all['Result'] = np.where(df_team['FTR'] == '', '', np.where(all['Won'], 'Win', (np.where(all['Lost'], 'Lose', 'Draw'))))
         # X['SumGoals'] = X.groupby('Opponent')['FullTimeGoals'].transform(sum)
         all['B365Max'] = np.maximum(np.maximum(df_team['B365H'], df_team['B365A']), df_team['B365D'])
         all['B365Min'] = np.minimum(np.minimum(df_team['B365H'], df_team['B365A']), df_team['B365D'])
@@ -193,6 +206,7 @@ def make_features(df, teams, train_year, validate_year, test_year):
 
         # replace nan with 0
         # TODO: better way to handle nan
+        # all.loc[np.isnan(all['FTR']), 'FTR'] = ''
         all.loc[np.isnan(all['Last5AgainstThisOpponentWon']), 'Last5AgainstThisOpponentWon'] = 0
         all.loc[np.isnan(all['Last5AgainstThisOpponentDraw']), 'Last5AgainstThisOpponentDraw'] = 0
         # X.loc[np.isnan(X['Last5AgainstThisOpponentLost']), 'Last5AgainstThisOpponentLost'] = 0
