@@ -93,8 +93,15 @@ def make_features(df, teams):
                                            np.where(all['B365Max'] == df_team['B365A'], -1,
                                                     0))
                                   )
-        all['B365Diff'] = np.where(all['B365Say'] == 1, all['B365Max'] - all['B365Min'],
-                                   all['B365Min'] - all['B365Max'])
+        # all['B365Diff'] = np.where(all['B365Say'] == 1, all['B365Max'] - all['B365Min'],
+        #                            all['B365Min'] - all['B365Max'])
+        all['B365Diff'] = np.where(all['B365Say'] == 1, all['B365Min'] - all['B365Max'],
+                                   np.where(all['B365Say'] == -1, all['B365Max'] - all['B365Min'],
+                                            # draw
+                                            np.where(all['HomeMatch'],
+                                            df_team['B365A'] - df_team['B365H'],
+                                            df_team['B365H'] - df_team['B365A']
+                                            ))) * -1
         all['Corners'] = np.where(all['HomeMatch'], df_team['HC'], df_team['AC'])
         all['Shots'] = np.where(all['HomeMatch'], df_team['HS'], df_team['AS'])
         all['ShotsOnTarget'] = np.where(all['HomeMatch'], df_team['HST'], df_team['AST'])
@@ -112,6 +119,8 @@ def make_features(df, teams):
                                                   np.where(all['Draw'], 0.5, 0)
                                                   )
                                   )
+        all['Goals'] = np.where(all['HomeMatch'], df_team['FTHG'], df_team['FTAG'])
+        all['Conceded'] = np.where(all['HomeMatch'], df_team['FTAG'], df_team['FTHG'])
 
         # find number of times won against this opponent in last 5 meetings
         for key, groupByOpponent in all.groupby('Opponent'):
@@ -160,6 +169,8 @@ def make_features(df, teams):
             xx['CornersSoFar'] = np.nancumsum(xx['Corners'].shift())
             xx['ShotsSoFar'] = np.nancumsum(xx['Shots'].shift())
             xx['ShotsOnTargetSoFar'] = np.nancumsum(xx['ShotsOnTarget'].shift())
+            xx['GoalsSoFar'] = np.nancumsum(xx['Goals'].shift())
+            xx['ConcededSoFar'] = np.nancumsum(xx['Conceded'].shift())
 
             xx['HomeWonNum'] = np.where(xx['HomeMatch'] & xx['Won'], 1, 0)
             xx['HomeWonSoFar'] = np.nancumsum(xx['HomeWonNum'].shift())
@@ -176,6 +187,8 @@ def make_features(df, teams):
             # all.loc[xx.index, 'CornersSoFar'] = xx['CornersSoFar']
             # all.loc[xx.index, 'ShotsSoFar'] = xx['ShotsSoFar']
             # all.loc[xx.index, 'ShotsOnTargetSoFar'] = xx['ShotsOnTargetSoFar']
+            # all.loc[xx.index, 'GoalsSoFar'] = xx['GoalsSoFar']
+            # all.loc[xx.index, 'ConcededSoSoFar'] = xx['ConcededSoSoFar']
             # all.loc[xx.index, 'HomeWonSoFar'] = xx['HomeWonSoFar']
             # all.loc[xx.index, 'AwayWonSoFar'] = xx['AwayWonSoFar']
             all.loc[xx.index, 'PointsSoFar'] = xx['PointsSoFar']
@@ -265,3 +278,5 @@ def close_leaks(X):
     del X['ShotsOnTarget']
     del X['Points']
     del X['AdjustedPoints']
+    del X['Goals']
+    del X['Conceded']
