@@ -18,7 +18,7 @@ teams = df.loc[(df['Year'] == validate_year) | (df['Year'] == test_year), 'HomeT
 teams = teams.unique()
 teams.sort()
 # teams = ['Arsenal', 'Liverpool']
-teams = football_loader.make_features(df, teams, train_year, validate_year, test_year)
+teams = football_loader.make_features(df, teams)
 df_league = None
 classes = ['Draw', 'Lose', 'Win']
 

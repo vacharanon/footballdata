@@ -222,6 +222,7 @@ def make_features(df, teams):
         all.loc[np.isnan(all['Last3Draw']), 'Last3Draw'] = 0
         all.loc[np.isnan(all['LastWon']), 'LastWon'] = 0
         all.loc[np.isnan(all['LastDraw']), 'LastDraw'] = 0
+        all.loc[np.isnan(all['B365Diff']), 'B365Diff'] = 0
 
         # restrict training data (too old data may not be irrelevance)
         X = all
