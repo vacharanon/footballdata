@@ -1,9 +1,8 @@
 import numpy as np
-from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, auc
+from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, auc, log_loss
 from sklearn.preprocessing import label_binarize
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier,AdaBoostClassifier,BaggingClassifier,ExtraTreesClassifier,GradientBoostingClassifier
-import numpy as np
 import pandas as pd
 import operator
 from football_loader.football_loader import load_league_csv, make_features, load_next_csv
@@ -82,3 +81,4 @@ for team in teams:
     #     print(f"{k}: {team} validation accuracy are: {v}")
     #     print(f"{k}: {team} test accuracy are: {test_accuracies[k]}")
     # Let's try next match
+

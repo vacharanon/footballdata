@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, auc
+from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, auc, log_loss
 from sklearn.preprocessing import label_binarize
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier,AdaBoostClassifier,BaggingClassifier,ExtraTreesClassifier,GradientBoostingClassifier
@@ -60,6 +60,9 @@ for team in teams:
         total = d
     else:
         total = total.append(d)
+    prob = lr.predict_proba(x_test)
+    ll = log_loss(y_test, prob)
+    print('Log Loss', ll)
 
     rfc = RandomForestClassifier(n_estimators=10)
     rfc.fit(x_train, y_train['Result'])
