@@ -5,6 +5,7 @@ from shutil import copyfile
 
 def main():
     seasons = {
+        2018: '1819',
         2017: '1718',
         # ----
         2016: '1617',

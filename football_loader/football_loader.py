@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 def load_next_csv(league, div):
-    df_next = pd.read_csv(f'next/{league}.csv',
+    df_next = pd.read_csv(f'next/fixtures.csv',
                               engine='python')
     df_next = df_next[df_next['Div'] == div]
     df_next.reset_index(drop=True, inplace=True)
