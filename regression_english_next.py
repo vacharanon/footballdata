@@ -31,7 +31,7 @@ df.reset_index(inplace=True)
 
 teams = make_features(df, teams)
 classes = ['Draw', 'Lose', 'Win']
-
+team_result = {}
 total = None
 for team in teams:
     # for team in ['Arsenal']:
@@ -66,6 +66,8 @@ for team in teams:
     # print(y_next_ped)
     prob = np.round(lr.predict_proba(x_next)*100, 2)[0]
     print(homeAwayTeams[0], '(H) vs', homeAwayTeams[1], '(A) ->', team, y_next_ped[0], list(zip(classes, prob)))
+   
+    team_result[homeAwayTeams[0]] = y_next_ped[0]
     # test_accuracies['LogisticRegression'] = accuracy_score(y_test, y_test_pred) * 100
     # d = pd.DataFrame(
     #     data={
@@ -82,3 +84,4 @@ for team in teams:
     #     print(f"{k}: {team} test accuracy are: {test_accuracies[k]}")
     # Let's try next match
 
+print(team_result)
