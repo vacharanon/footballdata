@@ -51,7 +51,7 @@ for team in teams:
     # if len(x_train) <= 0 or len(x_test) <= 0 or len(x_validate) <= 0:
     #     print(f'skip {team}')
     #     continue
-
+    if len(df.loc[x_next.index]) <= 0: continue
     homeAwayTeams = df.loc[x_next.index][['HomeTeam', 'AwayTeam']].values[0]
     # validate_accuracies = {}
     # test_accuracies = {}
