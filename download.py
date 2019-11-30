@@ -3,6 +3,7 @@ import requests
 from shutil import copyfile
 
 seasons = {
+    2019: '1920',
     2018: '1819',
     2017: '1718',
     # ----
